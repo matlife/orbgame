@@ -1,0 +1,78 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:background="@drawable/background"
+        android:layout_weight=".3">
+
+        <ImageView
+            android:id="@+id/sky"
+            android:layout_width="0dp"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="@string/sky"
+            android:src="@drawable/sky"
+            android:layout_height="0dp" />
+
+        <ImageView
+            android:id="@+id/grass"
+            android:layout_width="0dp"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="@string/grass"
+            android:src="@drawable/grass"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+
+            />
+
+        <ImageView
+            android:id="@+id/air"
+            android:layout_width="0dp"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="@string/grass"
+            android:src="@drawable/grass"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+
+            />
+
+        <ImageView
+            android:id="@+id/fire"
+            android:layout_width="0dp"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="@string/grass"
+            android:src="@drawable/grass"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+
+            />
+        <ImageView
+            android:id="@+id/sun"
+            android:layout_width="0dp"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="@string/grass"
+            android:src="@drawable/grass"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:background="@drawable/background"
+        android:layout_weight=".7"
+        tools:context=".AndroidSampleActivity" >
+
+
+
+    </LinearLayout>
+</LinearLayout>

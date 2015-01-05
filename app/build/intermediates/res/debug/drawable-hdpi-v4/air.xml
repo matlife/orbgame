@@ -1,0 +1,16 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:dither="true"
+    android:shape="oval" >
+
+    <gradient
+        android:type="radial"
+        android:gradientRadius="10"
+        android:angle="90"
+        android:startColor="#ffd3dbdc"
+        android:endColor="#ffd3dbdc"/>
+
+    <size
+        android:height="10dp"
+        android:width="10dp" />
+</shape>
+<!-- From: file:/Users/matthewlei/AndroidStudioProjects/MyApplication/app/src/main/res/drawable-hdpi/air.xml -->
