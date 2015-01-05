@@ -6,6 +6,9 @@ I found myself to really enjoy the combo aspect of Puzzle and Dragons and wanted
 
 TODO:
 -Board initialization bug { board can initialize with matches, the application should clear this before allowing user input} 
+
 -Orb match detection
+
 -Refill board after wipe
+
 -Implement gravity of orbs
