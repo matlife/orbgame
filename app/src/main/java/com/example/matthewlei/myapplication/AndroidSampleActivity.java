@@ -31,6 +31,12 @@ import android.widget.RelativeLayout;
 
 
 public class AndroidSampleActivity extends ActionBarActivity {
+
+    private float GRASS = 4;
+    private float FIRE = 1;
+    private float SKY = 2;
+    private float AIR = 3;
+
     private Drawable lastColor;
     private ImageView lastElement;
     private static final String IMAGEVIEW_TAG = "Android Logo";
@@ -94,6 +100,10 @@ public class AndroidSampleActivity extends ActionBarActivity {
                 grass2.setMaxWidth((int)((y/numSquares) * .7));
                 grass2.setMaxHeight((int)((y/numSquares) * .7));
 
+                // Set pivot to certain value so it may be distinguished back end
+                grass2.setPivotX(getColPivot(grass2.getBackground()));
+
+
                 grass2.setTag(IMAGEVIEW_TAG);
                 grass2.setOnLongClickListener(new View.OnLongClickListener() {
                     @Override
@@ -131,6 +141,7 @@ public class AndroidSampleActivity extends ActionBarActivity {
                                 ImageView dv = (ImageView) event.getLocalState();
                                 Drawable temp = v.getBackground();
                                 v.setBackground(lastColor);
+                                v.setPivotX(getColPivot(lastColor));
                                 lastElement.setBackground(temp);
                                 lastElement = (ImageView)v;
                                 //lastColor = temp;
@@ -141,6 +152,7 @@ public class AndroidSampleActivity extends ActionBarActivity {
                                 y_cord = (int) v.getY();
                                 dv = (ImageView) event.getLocalState();
                                 v.setBackground(lastColor);
+                                v.setPivotX(getColPivot(lastColor));
                                 v.invalidate();
                                 Log.d("obj", dv + "");
                                 Log.d("x", x_cord + "");
@@ -171,7 +183,10 @@ public class AndroidSampleActivity extends ActionBarActivity {
         //(getFromGrid((LinearLayout)findViewById(R.id.linearLayout1), 0, 0)).setBackgroundResource(R.drawable.sun);
 
     }
-
+    /*
+    * Remove matched orbs
+    *
+    * */
     private void clearBoard(LinearLayout board){
         //first element orb
         int yLen = ((LinearLayout)(board.getChildAt(0))).getChildCount(); // y dimension of board
@@ -180,36 +195,132 @@ public class AndroidSampleActivity extends ActionBarActivity {
         Drawable lastEle = v.getBackground();
         boolean same;
         int count; // counts the number of consecutive elements
+        //int ys = 0;
+
+        // clear vertical matches
         for (int x = 0; x < board.getChildCount(); x++){
             count = 0;
             for (int y = 0; y < yLen; y++){
+                // Grab colour of current indices
                 v = getFromGrid(board, x, y);
                 vEle = v.getBackground();
-                Log.d("Status:", lastEle.getConstantState().equals(vEle.getConstantState()) + " " + count);
-                same = lastEle.getConstantState().equals(vEle.getConstantState());
+
+                //Log.d("Status:", lastEle.getConstantState().equals(vEle.getConstantState()) + " " + count);
+                same = getColPivot(lastEle) == getColPivot(vEle);
 
                 if (same){
                     count++;
                 }
 
-
+                /*
+                * X
+                * X
+                * O
+                * X
+                * X
+                * */
                 // If new element has been found, or if it is the last element, check and clear
-                if (!same || (y == (yLen - 1))){
-                    if (count >= 3){
-                        for (int i = 0; i < count; i++ ){
-                            ImageView vc = getFromGrid(board, x, i);
-                            vc.setBackgroundResource((R.drawable.sun));
-                        }
-                    }
+                if (!same){
+                    clearHorizontalMatchAt(x,y,count,board);
                     count = 1;
                     lastEle = v.getBackground();
                 }
-
             }
+            clearHorizontalMatchAt(x,(yLen),count,board);
+
+        }
+
+
+        // clear horizontal matches
+        for (int y = 0; y < yLen; y++){
+            count = 0;
+            for (int x = 0; x < board.getChildCount(); x++){
+                // Grab colour of current indices
+                v = getFromGrid(board, x, y);
+                vEle = v.getBackground();
+
+                //Log.d("Status:", lastEle.getConstantState().equals(vEle.getConstantState()) + " " + count);
+                same = getColPivot(lastEle) == getColPivot(vEle);
+
+                if (same){
+                    count++;
+                }
+
+                /*
+                * X
+                * X
+                * O
+                * X
+                * X
+                * */
+                // If new element has been found, or if it is the last element, check and clear
+                if (!same){
+                    clearVerticalMatchAt(x,y,count,board);
+                    count = 1;
+                    lastEle = v.getBackground();
+                }
+            }
+            clearVerticalMatchAt(board.getChildCount(), y,count,board);
+
         }
     }
 
+    /*
+    * Returns the float value associated with the background.
+    *
+    * Returns 0 if the background is not a valid color (white, red, green or blue).
+    * */
+    private float getColPivot(Drawable bg){
 
+        if ((getResources().getDrawable(R.drawable.air)).getConstantState().equals(bg.getConstantState())){
+            return AIR;
+        }
+
+        if ((getResources().getDrawable(R.drawable.fire)).getConstantState().equals(bg.getConstantState())){
+            return FIRE;
+        }
+
+        if ((getResources().getDrawable(R.drawable.grass)).getConstantState().equals(bg.getConstantState())){
+            return GRASS;
+        }
+
+        if ((getResources().getDrawable(R.drawable.sky)).getConstantState().equals(bg.getConstantState())){
+            return SKY;
+        }
+
+        return 0;
+
+    }
+    private void clearHorizontalMatchAt(int x, int y, int count, LinearLayout board) {
+        if (count >= 3) {
+            //clearMatchAtXYC(x, y, count, board);
+
+            for (int i = 0; i < (count); i++) {
+                ImageView vc = getFromGrid(board, x, (y - count) + i);
+                vc.setBackgroundResource((R.drawable.sun));
+                //vc.setPivotX(getColPivot(R.()));
+                vc.setPivotX(0);
+            }
+        }
+    }
+    private void clearVerticalMatchAt(int x, int y, int count, LinearLayout board) {
+        if (count >= 3) {
+            //clearMatchAtXYC(x, y, count, board);
+
+            for (int i = 0; i < (count); i++) {
+                ImageView vc = getFromGrid(board, (x - count) + i, y);
+                vc.setBackgroundResource((R.drawable.sun));
+                vc.setPivotX(0);
+            }
+        }
+    }
+    /*
+    *
+    * Remove matched orbs
+    *
+    * Same as clearBoard, messier code
+    *
+    * */
     private void checkBoard(LinearLayout board){
         int count;
         boolean same;
