@@ -37,6 +37,11 @@ public class AndroidSampleActivity extends ActionBarActivity {
     private float SKY = 2;
     private float AIR = 3;
 
+    private int DISPLAYX = 0;
+    private int DISPLAYY = 0;
+
+    private int NUMORBS = 9;
+
     private Drawable lastColor;
     private ImageView lastElement;
     private static final String IMAGEVIEW_TAG = "Android Logo";
@@ -45,23 +50,31 @@ public class AndroidSampleActivity extends ActionBarActivity {
     private ImageView getFromGrid(LinearLayout grid, int x, int y){
         return (ImageView)((LinearLayout)(grid.getChildAt(x))).getChildAt(y);
     }
+
+    private void changeOrb(View v, Drawable lastColor){
+        v.setBackground(lastColor);
+        v.setPivotX(getColPivot(lastColor));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final String[] grid = new String[16];
 
-
         setContentView(R.layout.activity_android_sample);
-
-
 
         //get the sun View
         final ImageView grass = (ImageView) findViewById(R.id.grass);
-        // Load it
-        //Animation sunRise = AnimationUtils.loadAnimation(this, R.anim.sun_rise);
-        //apply the animation to the View
-        //sun.startAnimation(sunRise);
+
+        // get size of display
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        DISPLAYX = size.x;
+        DISPLAYY = size.y;
+
+        //TODO Make board population prettier
 
         for (int h = 0; h <= 4; h ++){
             final LinearLayout ln = ((LinearLayout)findViewById(R.id.linearLayout1));
@@ -72,12 +85,6 @@ public class AndroidSampleActivity extends ActionBarActivity {
             for (int i = 0; i <= 4; i ++){
                 final ImageView grass2 = new ImageView(getApplicationContext());
 
-                // get size of display
-                Display display = getWindowManager().getDefaultDisplay();
-                Point size = new Point();
-                display.getSize(size);
-                int x = size.x;
-                int y = size.y;
 
                 //Subect to change
                 int numSquares = 9;
@@ -94,11 +101,11 @@ public class AndroidSampleActivity extends ActionBarActivity {
                 //Set background
                 grass2.setBackgroundResource(elements[(int)(Math.random()*elements.length)]);
 
-                grass2.setMinimumWidth(y/numSquares);
-                grass2.setMinimumHeight(y/numSquares);
+                grass2.setMinimumWidth(DISPLAYY/numSquares);
+                grass2.setMinimumHeight(DISPLAYY/numSquares);
 
-                grass2.setMaxWidth((int)((y/numSquares) * .7));
-                grass2.setMaxHeight((int)((y/numSquares) * .7));
+                grass2.setMaxWidth((int)((DISPLAYY/numSquares) * .7));
+                grass2.setMaxHeight((int)((DISPLAYY/numSquares) * .7));
 
                 // Set pivot to certain value so it may be distinguished back end
                 grass2.setPivotX(getColPivot(grass2.getBackground()));
@@ -133,38 +140,36 @@ public class AndroidSampleActivity extends ActionBarActivity {
                     public boolean onDrag(View v, DragEvent event){
                         switch(event.getAction()){
                             case DragEvent.ACTION_DRAG_ENTERED:
-                               // Log.d("msg1", "entered");
+
                                 int x_cord = (int) event.getX();
                                 int y_cord = (int) event.getY();
-                               // Log.d("X-cord on enter", "" +x_cord);
-                                //Log.d("Y-cord on enter", "" +y_cord);
+
                                 ImageView dv = (ImageView) event.getLocalState();
                                 Drawable temp = v.getBackground();
-                                v.setBackground(lastColor);
-                                v.setPivotX(getColPivot(lastColor));
-                                lastElement.setBackground(temp);
+
+                                // Change Colors
+                                changeOrb(lastElement, temp);
+                                changeOrb(v, lastColor);
+
+                                // Set set pointer to lastElement
                                 lastElement = (ImageView)v;
-                                //lastColor = temp;
                                 break;
                             case DragEvent.ACTION_DROP:
                                 Log.d("msg2", "dropped");
                                 x_cord = (int) v.getX();
                                 y_cord = (int) v.getY();
                                 dv = (ImageView) event.getLocalState();
-                                v.setBackground(lastColor);
-                                v.setPivotX(getColPivot(lastColor));
+
+                               // Change orb color
+                                changeOrb(v, lastColor);
+                               // v.setBackground(lastColor);
+                               // v.setPivotX(getColPivot(lastColor));
+
                                 v.invalidate();
-                                Log.d("obj", dv + "");
-                                Log.d("x", x_cord + "");
-                                Log.d("y", y_cord + "");
-                                //dv.setBackgroundResource(R.drawable.grass);
-                                // dv.setX(x_cord);
-                                //dv.setY((v.getHeight()/2);
-                                // dv.setX(x_cord-(dv.getWidth()/2));
-                                //dv.setY(y_cord);
-                                //redraw
                                 dv.invalidate();
+
                                 clearBoard(ln);
+                                gravity(ln);
                                 break;
                             //return true;
                         }
@@ -205,28 +210,21 @@ public class AndroidSampleActivity extends ActionBarActivity {
                 v = getFromGrid(board, x, y);
                 vEle = v.getBackground();
 
-                //Log.d("Status:", lastEle.getConstantState().equals(vEle.getConstantState()) + " " + count);
-                same = getColPivot(lastEle) == getColPivot(vEle);
+                same = getColPivot(lastEle) == v.getPivotX();
 
                 if (same){
                     count++;
                 }
 
-                /*
-                * X
-                * X
-                * O
-                * X
-                * X
-                * */
+
                 // If new element has been found, or if it is the last element, check and clear
                 if (!same){
-                    clearHorizontalMatchAt(x,y,count,board);
-                    count = 1;
+                    clearVerticalMatchAt(x,y,count,board);
+                    count = 1; // We have seen one of this colour
                     lastEle = v.getBackground();
                 }
             }
-            clearHorizontalMatchAt(x,(yLen),count,board);
+            clearVerticalMatchAt(x,(yLen),count,board);
 
         }
 
@@ -240,32 +238,92 @@ public class AndroidSampleActivity extends ActionBarActivity {
                 vEle = v.getBackground();
 
                 //Log.d("Status:", lastEle.getConstantState().equals(vEle.getConstantState()) + " " + count);
-                same = getColPivot(lastEle) == getColPivot(vEle);
+                //same = getColPivot(lastEle) == getColPivot(vEle);
 
+                same = getColPivot(lastEle) == v.getPivotX();
                 if (same){
                     count++;
                 }
 
-                /*
-                * X
-                * X
-                * O
-                * X
-                * X
-                * */
+
                 // If new element has been found, or if it is the last element, check and clear
                 if (!same){
-                    clearVerticalMatchAt(x,y,count,board);
+                    clearHorizontalMatchAt(x,y,count,board);
                     count = 1;
                     lastEle = v.getBackground();
+
                 }
             }
-            clearVerticalMatchAt(board.getChildCount(), y,count,board);
+            clearHorizontalMatchAt(board.getChildCount(), y,count,board);
 
+        }
+
+    }
+    /*
+    * Drops all colored orbs to the bottom of the board
+    * */
+    private void gravity(LinearLayout board){
+        int yLen = ((LinearLayout)(board.getChildAt(0))).getChildCount(); // y dimension of board
+        Drawable drawableAbove;
+        int index = 0;
+        ImageView[] l = generateElementList(100);
+        for (int x = 0; x < board.getChildCount(); x++) {
+            //index = 0;
+            for (int y = 0; y < yLen; y++) {
+                if (getColPivot(getFromGrid(board,x,y).getBackground()) == 0){
+                    for (int z = (y); z > -1; z --){
+                        //getFromGrid(board,x,z).setVisibility(View.INVISIBLE);
+
+                        if (z > 0){
+                            drawableAbove = getFromGrid(board, x, z - 1).getBackground();
+                            Log.d("This should print", " ");
+                        }
+                        else {
+                            drawableAbove = l[index].getBackground();
+                            index++;
+                            //  Beginnings of implementing gravity. Have percolate colours to the lowest level
+                            //  Need to implement animations.
+                            // Improve randomization.
+
+                        }
+                        Log.d("ERROR", "" + x + " " + y + " " + z);
+                        changeOrb(getFromGrid(board,x,z),drawableAbove);
+                       // getFromGrid(board,x,z)
+                    }
+                }
+            }
         }
     }
 
-    /*
+    private ImageView[] generateElementList(int size){
+        int elements[] = new int[]{
+                (R.drawable.grass),
+                (R.drawable.fire),
+                (R.drawable.sky),
+                (R.drawable.air),
+        };
+        final ImageView[] l = new ImageView[size];
+        for (int i = 0; i < size; i++){
+            final ImageView orb = new ImageView(getApplicationContext());
+
+            orb.setBackgroundResource(elements[(int)(Math.random()*elements.length)]);
+
+            orb.setMinimumWidth(DISPLAYX/NUMORBS);
+            orb.setMinimumHeight(DISPLAYY/NUMORBS);
+
+            orb.setMaxWidth((int)((DISPLAYY/NUMORBS) * .7));
+            orb.setMaxHeight((int)((DISPLAYY/NUMORBS) * .7));
+
+            // Set pivot to certain value so it may be distinguished back end
+            orb.setPivotX(getColPivot(orb.getBackground()));
+
+            l[i] = orb;
+        }
+        //Log.d("COLORS: ", l[0] + "" );
+        return l;
+    }
+
+     /*
     * Returns the float value associated with the background.
     *
     * Returns 0 if the background is not a valid color (white, red, green or blue).
@@ -291,131 +349,26 @@ public class AndroidSampleActivity extends ActionBarActivity {
         return 0;
 
     }
-    private void clearHorizontalMatchAt(int x, int y, int count, LinearLayout board) {
+    private void clearVerticalMatchAt(int x, int y, int count, LinearLayout board) {
         if (count >= 3) {
             //clearMatchAtXYC(x, y, count, board);
 
             for (int i = 0; i < (count); i++) {
                 ImageView vc = getFromGrid(board, x, (y - count) + i);
                 vc.setBackgroundResource((R.drawable.sun));
-                //vc.setPivotX(getColPivot(R.()));
-                vc.setPivotX(0);
+                //vc.setPivotX(-1);
             }
         }
     }
-    private void clearVerticalMatchAt(int x, int y, int count, LinearLayout board) {
+    private void clearHorizontalMatchAt(int x, int y, int count, LinearLayout board) {
         if (count >= 3) {
             //clearMatchAtXYC(x, y, count, board);
 
             for (int i = 0; i < (count); i++) {
                 ImageView vc = getFromGrid(board, (x - count) + i, y);
                 vc.setBackgroundResource((R.drawable.sun));
-                vc.setPivotX(0);
+                //vc.setPivotX(-1);
             }
-        }
-    }
-    /*
-    *
-    * Remove matched orbs
-    *
-    * Same as clearBoard, messier code
-    *
-    * */
-    private void checkBoard(LinearLayout board){
-        int count;
-        boolean same;
-        int offset;
-        LinearLayout row, col;
-        Drawable element;
-        for (int h = 0; h < board.getChildCount(); h++){
-            // Get row
-            LinearLayout v = (LinearLayout)board.getChildAt(h);
-
-            // Get colour of first value in column
-            col = (LinearLayout)(board.getChildAt(h)); // col at h
-            element = (Drawable)(col.getChildAt(0).getBackground()); // first val of first col
-           // col.getChildAt(0).setBackgroundResource(R.drawable.sun);
-            count = 0;
-            for (int i = 0; i < v.getChildCount(); i++) {
-                ImageView vi = (ImageView)v.getChildAt(i);
-                Drawable bgi = vi.getBackground();
-                same = (bgi.getConstantState().equals(element.getConstantState()));
-                if (same) {
-                    count ++;
-                }
-
-                // If the element is not consistent or we have reached the last element on the board
-                if ((!same) || (i == (v.getChildCount() - 1))){
-                    // Set offset to 0 when: last element, last element and no continuation.
-                    // Exclude the case where it is the last element and continuation holds.
-                    /* P = Last element, Q = element is a continuation
-                    * [ P V (P & ~Q) ] & !( P & Q) ]
-                    * */
-                   // offset = ((i == (v.getChildCount() - 1) || !same))? 0:1;
-                    if (count >= 3){
-                        offset = (((i == (v.getChildCount() - 1)) || ((i == (v.getChildCount() - 1)) && !same))
-                                && !(((i == (v.getChildCount() - 1))) && !same)) ? 0:1;
-                        for (int j = offset; j < (count + offset); j ++){
-                          //  Log.d("Index", "i = " + i + "; j = " + offset + "");
-                            ImageView t = (ImageView)v.getChildAt(i - j);
-                            t.setBackgroundResource((R.drawable.sun));
-                        }
-                    }
-                   // Log.d("WOWOWOW", "a match");
-                    count = 1;
-                    element = bgi;
-                }
-
-
-
-            }
-
-        }
-
-
-        LinearLayout v = (LinearLayout)board.getChildAt(0); // Layout at col 0
-        for (int y = 0; y < ((LinearLayout)board.getChildAt(0)).getChildCount(); y++){ // iterate y
-            count = 0;
-            col = (LinearLayout)(board.getChildAt(0)); // Val at y = h, x = i h
-            element = (Drawable)(col.getChildAt(y).getBackground()); // First element
-            //col.getChildAt(h).setBackgroundResource(R.drawable.sun);
-            Log.d("count ", "" + board.getChildCount());
-            for (int x = 0; x < board.getChildCount(); x++) { // iterate  y
-                // Get child at x, y
-                LinearLayout vi = (LinearLayout)(((LinearLayout)board.getChildAt(x)).getChildAt(y));
-                Drawable bgi = vi.getBackground(); // get background
-                same = (bgi.getConstantState().equals(element.getConstantState())); // compare bg
-
-                if (same) {
-                    count ++;
-                }
-
-                // If the element is not consistent or we have reached the last element on the board
-                if ((!same) || (x == (v.getChildCount() - 1))){ // If end or new color
-                    // Offset when...
-                    if (count >= 3){
-                        offset = 0;
-                        Log.d("Found a match", "x: " + x + ", x: " + y + " offset: " + offset);
-                        for (int j = offset; j < (count + offset); j ++){
-                           // Log.d("Index", "i = " + i + "; j = " + j + "");
-                           // LinearLayout rowView = ((LinearLayout)v.getChildAt(h));
-                         //   LinearLayout colView = (LinearLayout)(board.getChildAt(i-j));
-
-                         //   ImageView colVal = (ImageView)(colView.getChildAt(h));
-                         //   colVal.setBackgroundResource((R.drawable.sun));
-                            //colVal.setColorFilter(1);
-                        }
-                    }
-                    //Log.d("WOWOWOW", "a match");
-                    count = 1;
-                    element = bgi;
-                }
-
-
-            v = (LinearLayout)board.getChildAt(y + 1);
-
-            }
-
         }
     }
 
